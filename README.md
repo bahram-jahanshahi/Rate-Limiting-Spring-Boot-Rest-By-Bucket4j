@@ -25,6 +25,7 @@ bucket.tryConsume(1);
 ```
 then you can run this test:
 ```java
+
 @Test
 void given_10_try_in_1_minute_when_try_10_times_then_the_11th_try_should_return_false() {
     SimpleRateLimiterService simpleRateLimiterService = new SimpleRateLimiterService(10, 60);
@@ -32,5 +33,43 @@ void given_10_try_in_1_minute_when_try_10_times_then_the_11th_try_should_return_
         assertThat(simpleRateLimiterService.tryCall()).isEqualTo(true);
     }
     assertThat(simpleRateLimiterService.tryCall()).isEqualTo(false);
+}
+```
+## Using HandlerInterceptor to handle all the Rest Api
+```java
+@Component
+public class RateLimitInterceptor implements HandlerInterceptor {
+
+    private final SimpleRateLimiterService rateLimiter = new SimpleRateLimiterService(10, 60);
+
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        if (rateLimiter.tryCall()) {
+            response.addHeader("X-Rate-Limit-Remaining", String.valueOf(rateLimiter.getRemainingTries()));
+            return true;
+        }
+        response.addHeader("X-Rate-Limit-Remaining", String.valueOf(rateLimiter.getRemainingTries()));
+        response.sendError(HttpStatus.TOO_MANY_REQUESTS.value());
+        return false;
+    }
+}
+```
+and add this interceptor to web configure
+```java
+@Component
+public class AppConfig implements WebMvcConfigurer {
+
+    private final RateLimitInterceptor rateLimitInterceptor;
+
+    public AppConfig(RateLimitInterceptor rateLimitInterceptor) {
+        this.rateLimitInterceptor = rateLimitInterceptor;
+    }
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry
+                .addInterceptor(rateLimitInterceptor)
+                .addPathPatterns("/limited-rest/simple/**");
+    }
 }
 ```
