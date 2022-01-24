@@ -12,19 +12,10 @@ import se.bahram.cloudnative.springbootrestapiratelimiting.services.SimpleRateLi
 @RequestMapping("/limited-rest/simple")
 public class SimpleRateLimitedRestController {
 
-    private final SimpleRateLimiterService rateLimiter = new SimpleRateLimiterService(10, 60);
-
     @GetMapping("/")
     private ResponseEntity<String> simple() {
-        if (rateLimiter.tryCall()) {
-            return ResponseEntity
-                    .ok()
-                    .header("X-Rate-Limit-Remaining", String.valueOf(rateLimiter.getRemainingTries()))
-                    .build();
-        }
         return ResponseEntity
-                .status(HttpStatus.TOO_MANY_REQUESTS)
-                .header("X-Rate-Limit-Remaining", String.valueOf(rateLimiter.getRemainingTries()))
+                .ok()
                 .build();
     }
 }
