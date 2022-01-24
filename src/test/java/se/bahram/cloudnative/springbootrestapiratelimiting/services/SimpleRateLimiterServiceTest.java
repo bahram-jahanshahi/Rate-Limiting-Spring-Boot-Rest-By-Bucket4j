@@ -12,7 +12,9 @@ public class SimpleRateLimiterServiceTest {
         SimpleRateLimiterService simpleRateLimiterService = new SimpleRateLimiterService(10, 60);
         for (int i = 0; i < 10; i++) {
             assertThat(simpleRateLimiterService.tryCall()).isEqualTo(true);
+            assertThat(simpleRateLimiterService.getRemainingTries()).isEqualTo(9 - i);
         }
         assertThat(simpleRateLimiterService.tryCall()).isEqualTo(false);
+        assertThat(simpleRateLimiterService.getRemainingTries()).isEqualTo(0);
     }
 }
